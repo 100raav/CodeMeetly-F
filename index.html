@@ -37,93 +37,106 @@
         </div>
     </nav>
 
-    <!-- landing page -->
-    <div id="landing" class="landing">
-        <div class="hero">
-            <h1>CodeMeetly</h1>
-            <p>Real‑time coding interviews · live editor · video/voice · screen share</p>
-        </div>
-        <div class="room-forms">
-            <!-- create room -->
-            <div class="room-card">
-                <h3><i class="fas fa-plus-circle" style="color:var(--success);"></i> Create room</h3>
-                <input type="text" id="roomNameCreate" placeholder="Room name" value="Interview room">
-                <input type="password" id="roomPassCreate" placeholder="Password (optional)">
-                <button class="btn-success" onclick="createRoom()"><i class="fas fa-door-open"></i> Create & start</button>
-            </div>
-            <!-- join room -->
-            <div class="room-card">
-                <h3><i class="fas fa-sign-in-alt" style="color:var(--accent);"></i> Join room</h3>
-                <input type="text" id="roomIdJoin" placeholder="Room ID or link" value="">
-                <input type="password" id="roomPassJoin" placeholder="Password">
-                <button class="btn-primary" onclick="joinRoom()"><i class="fas fa-sign-in-alt"></i> Join</button>
-                <p id="joinError" style="color:var(--danger); font-size:0.9rem; margin-top:0.5rem;"></p>
-            </div>
+    <!-- login page (visible by default) -->
+    <div id="loginPage" class="landing" style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+        <div class="room-card" style="text-align: center; max-width: 400px;">
+            <h2><i class="fab fa-google" style="color: #DB4437;"></i> Login with Google</h2>
+            <p style="margin: 1rem 0; color: var(--text-secondary);">Sign in to start or join coding interviews</p>
+            <button class="btn-primary" id="googleLoginBtn"><i class="fab fa-google"></i> Sign in with Google</button>
         </div>
     </div>
 
-    <!-- room view (hidden initially) -->
-    <div id="roomView" class="room-container" style="display:none;">
-        <div class="room-header">
-            <div><i class="fas fa-door-open"></i> <span id="currentRoomName">Interview room</span> (ID: <span id="currentRoomId">cm-xyz</span>)</div>
-            <div><button class="btn-outline" onclick="copyInviteLink()"><i class="fas fa-link"></i> Copy invite</button> <button class="btn-danger" onclick="endSession()"><i class="fas fa-phone-slash"></i> End</button></div>
-        </div>
-        <div class="room-main">
-            <!-- left sidebar -->
-            <div class="left-sidebar">
-                <div class="participants-panel">
-                    <h4><i class="fas fa-users"></i> Participants (<span id="participantCount">1</span>/1000)</h4>
-                    <ul id="participantList">
-                        <li><i class="fas fa-crown" style="color:gold;"></i> You (interviewer) <span class="badge">creator</span></li>
-                    </ul>
-                    <div class="admin-controls" id="adminControls">
-                        <button class="btn-outline" onclick="inviteParticipant()"><i class="fas fa-user-plus"></i> Invite</button>
-                        <button class="btn-outline" onclick="muteAll()"><i class="fas fa-microphone-slash"></i> Mute all</button>
-                        <select id="privateUserSelect" style="background:var(--glass-bg); border-radius:30px; padding:0.5rem;">
-                            <option>Select participant</option>
-                        </select>
-                        <button class="btn-outline" onclick="sendPrivate()"><i class="fas fa-comment"></i> Private msg</button>
-                    </div>
+    <!-- main app (hidden initially) -->
+    <div id="app" style="display: none;">
+        <!-- landing page -->
+        <div id="landing" class="landing">
+            <div class="hero">
+                <h1>CodeMeetly</h1>
+                <p>Real‑time coding interviews · live editor · video/voice · screen share</p>
+            </div>
+            <div class="room-forms">
+                <!-- create room -->
+                <div class="room-card">
+                    <h3><i class="fas fa-plus-circle" style="color:var(--success);"></i> Create room</h3>
+                    <input type="text" id="roomNameCreate" placeholder="Room name" value="Interview room">
+                    <input type="password" id="roomPassCreate" placeholder="Password (optional)">
+                    <button class="btn-success" onclick="createRoom()"><i class="fas fa-door-open"></i> Create & start</button>
                 </div>
-                <div class="chat-panel">
-                    <div class="chat-tabs">
-                        <span class="chat-tab active" onclick="setChatMode('group',this)">Group</span>
-                        <span class="chat-tab" onclick="setChatMode('private',this)">Private</span>
-                    </div>
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-msg"><strong>System:</strong> Room created. You are interviewer.</div>
-                    </div>
-                    <div class="chat-control">
-                        <input id="chatInput" placeholder="Type message...">
-                        <button onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
-                    </div>
+                <!-- join room -->
+                <div class="room-card">
+                    <h3><i class="fas fa-sign-in-alt" style="color:var(--accent);"></i> Join room</h3>
+                    <input type="text" id="roomIdJoin" placeholder="Room ID or link" value="">
+                    <input type="password" id="roomPassJoin" placeholder="Password">
+                    <button class="btn-primary" onclick="joinRoom()"><i class="fas fa-sign-in-alt"></i> Join</button>
+                    <p id="joinError" style="color:var(--danger); font-size:0.9rem; margin-top:0.5rem;"></p>
                 </div>
             </div>
-            <!-- right content -->
-            <div class="right-content">
-                <!-- video panel -->
-                <div class="video-panel">
-                    <h4><i class="fas fa-video"></i> Video / share</h4>
-                    <div class="video-grid" id="videoGrid">
-                        <div class="video-tile" id="localTile">
-                            <video id="localVideo" autoplay muted playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
-                            <i class="fas fa-user-circle" id="localIcon" style="font-size:3rem;"></i>
-                            <span class="label" id="localLabel">You</span>
+        </div>
+
+        <!-- room view (hidden initially) -->
+        <div id="roomView" class="room-container" style="display:none;">
+            <div class="room-header">
+                <div><i class="fas fa-door-open"></i> <span id="currentRoomName">Interview room</span> (ID: <span id="currentRoomId">cm-xyz</span>)</div>
+                <div><button class="btn-outline" onclick="copyInviteLink()"><i class="fas fa-link"></i> Copy invite</button> <button class="btn-danger" onclick="endSession()"><i class="fas fa-phone-slash"></i> End</button></div>
+            </div>
+            <div class="room-main">
+                <!-- left sidebar -->
+                <div class="left-sidebar">
+                    <div class="participants-panel">
+                        <h4><i class="fas fa-users"></i> Participants (<span id="participantCount">1</span>/4)</h4>
+                        <ul id="participantList">
+                            <li><i class="fas fa-crown" style="color:gold;"></i> You (interviewer) <span class="badge">creator</span></li>
+                        </ul>
+                        <div class="admin-controls" id="adminControls">
+                            <button class="btn-outline" onclick="inviteParticipant()"><i class="fas fa-user-plus"></i> Invite</button>
+                            <button class="btn-outline" onclick="muteAll()"><i class="fas fa-microphone-slash"></i> Mute all</button>
+                            <select id="privateUserSelect" style="background:var(--glass-bg); border-radius:30px; padding:0.5rem;">
+                                <option>Select participant</option>
+                            </select>
+                            <button class="btn-outline" onclick="sendPrivate()"><i class="fas fa-comment"></i> Private msg</button>
                         </div>
                     </div>
-                    <div class="control-bar">
-                        <button class="btn-camera" id="cameraBtn" onclick="toggleCamera()"><i class="fas fa-video"></i> Camera</button>
-                        <button class="btn-mic" id="micBtn" onclick="toggleMic()"><i class="fas fa-microphone"></i> Mic</button>
-                        <button class="btn-share" id="shareBtn" onclick="shareScreen()"><i class="fas fa-desktop"></i> Share</button>
+                    <div class="chat-panel">
+                        <div class="chat-tabs">
+                            <span class="chat-tab active" onclick="setChatMode('group',this)">Group</span>
+                            <span class="chat-tab" onclick="setChatMode('private',this)">Private</span>
+                        </div>
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-msg"><strong>System:</strong> Room created. You are interviewer.</div>
+                        </div>
+                        <div class="chat-control">
+                            <input id="chatInput" placeholder="Type message...">
+                            <button onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+                        </div>
                     </div>
                 </div>
-                <!-- code editor panel -->
-                <div class="editor-panel">
-                    <div class="question-area" id="questionArea">
-                        <!-- will be filled by JS based on role -->
+                <!-- right content -->
+                <div class="right-content">
+                    <!-- video panel -->
+                    <div class="video-panel">
+                        <h4><i class="fas fa-video"></i> Video / share</h4>
+                        <div class="video-grid" id="videoGrid">
+                            <div class="video-tile" id="localTile">
+                                <video id="localVideo" autoplay muted playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+                                <i class="fas fa-user-circle" id="localIcon" style="font-size:3rem;"></i>
+                                <span class="label" id="localLabel">You</span>
+                            </div>
+                        </div>
+                        <div class="control-bar">
+                            <button class="btn-camera" id="cameraBtn" onclick="toggleCamera()"><i class="fas fa-video"></i> Camera</button>
+                            <button class="btn-mic" id="micBtn" onclick="toggleMic()"><i class="fas fa-microphone"></i> Mic</button>
+                            <button class="btn-share" id="shareBtn" onclick="shareScreen()"><i class="fas fa-desktop"></i> Share</button>
+                        </div>
+                        <p id="mobileShareWarning" style="color:var(--warning); margin-top:0.5rem; display:none;"><i class="fas fa-exclamation-triangle"></i> Screen sharing not available on mobile.</p>
                     </div>
-                    <div id="codeEditor">// Write your code here</div>
-                    <p style="margin-top:0.5rem; color:var(--text-secondary);"><i class="fas fa-sync"></i> Live sync: interviewer & candidate see same</p>
+                    <!-- code editor panel -->
+                    <div class="editor-panel">
+                        <div class="question-area" id="questionArea">
+                            <!-- will be filled by JS based on role -->
+                        </div>
+                        <div id="codeEditor">// Write your code here</div>
+                        <p style="margin-top:0.5rem; color:var(--text-secondary);"><i class="fas fa-sync"></i> Live sync: interviewer & candidate see same</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -162,7 +175,7 @@
 
     <!-- footer -->
     <footer class="footer">
-        <div>© 2026 CodeMeetly · live coding interview</div>
+        <div>© 2026 CodeMeetly · Live coding interview</div>
         <div><a onclick="showAbout()">About</a> · <a onclick="showTeam()">Team</a> · <a onclick="showPrivacy()">Privacy</a></div>
         <div><i class="fas fa-code"></i> Built with 💙 by Team CodeMeetly</div>
     </footer>
