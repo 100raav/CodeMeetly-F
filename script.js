@@ -10,15 +10,39 @@ let screenStream = null;
 let micEnabled = true;
 let aceEditor = null;
 let currentQuestion = ''; // shared question text
+const MAX_PARTICIPANTS = 4; // 👈 changed from 1000 to 4
+
+// Detect mobile
+const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+// ---------- login ----------
+document.getElementById('googleLoginBtn').addEventListener('click', () => {
+    // Mock Google login – in real app, redirect to backend OAuth
+    const fakeToken = 'mock-jwt-token-' + Math.random().toString(36).substring(2);
+    localStorage.setItem('token', fakeToken);
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    showLanding();
+    alert('Logged in with Google (mock)');
+});
 
 // ---------- initialization ----------
 window.onload = function() {
+    // Check if already logged in (mock)
+    if (localStorage.getItem('token')) {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+    }
     aceEditor = ace.edit("codeEditor");
     aceEditor.setTheme("ace/theme/tomorrow_night");
     aceEditor.session.setMode("ace/mode/javascript");
     aceEditor.setOptions({ fontSize: "13px", showPrintMargin: false });
     updateParticipantList();
     updateQuestionUI();
+    // Show mobile warning for screen sharing
+    if (isMobile) {
+        document.getElementById('mobileShareWarning').style.display = 'block';
+    }
 };
 
 // ---------- theme toggle ----------
@@ -82,8 +106,8 @@ function joinRoom() {
         document.getElementById('joinError').innerText = 'Incorrect password.';
         return;
     }
-    if (participants.length >= 1000) {
-        document.getElementById('joinError').innerText = 'Room full (max 1000 participants).';
+    if (participants.length >= MAX_PARTICIPANTS) {
+        document.getElementById('joinError').innerText = `Room full (max ${MAX_PARTICIPANTS} participants).`;
         return;
     }
     let newName = prompt("Enter your name:", "Candidate");
@@ -98,8 +122,8 @@ function joinRoom() {
 }
 
 function inviteParticipant() {
-    if (participants.length >= 1000) {
-        alert('Maximum participants (1000) reached.');
+    if (participants.length >= MAX_PARTICIPANTS) {
+        alert(`Maximum ${MAX_PARTICIPANTS} participants allowed.`);
         return;
     }
     let name = prompt("Enter participant name:", "Alex");
@@ -141,8 +165,6 @@ function updateQuestionUI() {
         area.innerHTML = `<textarea id="questionInput" placeholder="Type your question here..." rows="3">${currentQuestion}</textarea>`;
         document.getElementById('questionInput').addEventListener('input', function(e) {
             currentQuestion = e.target.value;
-            // In a real app, broadcast to others; here we just update the shared variable.
-            // For demo, we also update any read-only view if we were to switch roles, but since it's single client, it's fine.
         });
     } else {
         // interviewee: read-only display
@@ -180,14 +202,12 @@ function sendPrivate() { setChatMode('private', document.querySelectorAll('.chat
 // ---------- video/audio ----------
 async function toggleCamera() {
     let btn = document.getElementById('cameraBtn');
-    // If screen is being shared, don't allow camera toggle (or handle gracefully)
     if (screenStream) {
         alert('Stop screen sharing first to toggle camera.');
         return;
     }
     if (localStream && localStream.getVideoTracks().length > 0) {
         localStream.getVideoTracks().forEach(t => t.stop());
-        // remove video track from stream
         localStream.getVideoTracks().forEach(t => localStream.removeTrack(t));
         document.getElementById('localVideo').style.display = 'none';
         document.getElementById('localIcon').style.display = 'block';
@@ -198,7 +218,6 @@ async function toggleCamera() {
             if (!localStream) {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: micEnabled });
             } else {
-                // add video track
                 let newStream = await navigator.mediaDevices.getUserMedia({ video: true });
                 let newTrack = newStream.getVideoTracks()[0];
                 localStream.addTrack(newTrack);
@@ -216,7 +235,6 @@ async function toggleCamera() {
 async function toggleMic() {
     let btn = document.getElementById('micBtn');
     if (!localStream) {
-        // No stream yet, just toggle state
         micEnabled = !micEnabled;
         if (micEnabled) {
             btn.classList.remove('off');
@@ -248,12 +266,14 @@ async function toggleMic() {
     }
 }
 async function shareScreen() {
+    if (isMobile) {
+        alert('Screen sharing is not supported on mobile devices.');
+        return;
+    }
     let btn = document.getElementById('shareBtn');
     if (screenStream) {
-        // Stop sharing
         screenStream.getTracks().forEach(t => t.stop());
         screenStream = null;
-        // Restore camera feed if available
         if (localStream && localStream.getVideoTracks().length > 0) {
             let video = document.getElementById('localVideo');
             video.srcObject = localStream;
@@ -270,7 +290,6 @@ async function shareScreen() {
     }
     try {
         screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        // Replace local tile content with screen stream
         let video = document.getElementById('localVideo');
         video.srcObject = screenStream;
         video.style.display = 'block';
@@ -279,7 +298,6 @@ async function shareScreen() {
         btn.classList.add('off');
         btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
         screenStream.getVideoTracks()[0].onended = () => {
-            // When user stops sharing via browser UI
             screenStream = null;
             if (localStream && localStream.getVideoTracks().length > 0) {
                 video.srcObject = localStream;
@@ -314,10 +332,8 @@ function endSession() {
         updateParticipantList();
         let grid = document.getElementById('videoGrid');
         grid.innerHTML = `<div class="video-tile" id="localTile"><video id="localVideo" autoplay muted playsinline style="display:none;"></video><i class="fas fa-user-circle" id="localIcon" style="font-size:3rem;"></i><span class="label" id="localLabel">You</span></div>`;
-        // reset question
         currentQuestion = '';
         updateQuestionUI();
-        // reset camera/mic buttons
         document.getElementById('cameraBtn').classList.add('off');
         document.getElementById('cameraBtn').innerHTML = '<i class="fas fa-video-slash"></i> Camera';
         document.getElementById('micBtn').classList.remove('off');
@@ -329,7 +345,13 @@ function endSession() {
 function muteAll() { alert('Mute all (mock)'); }
 
 // logout
-document.getElementById('logoutBtn').addEventListener('click', ()=> { alert('Logged out'); showLanding(); roomCreated=false; });
+document.getElementById('logoutBtn').addEventListener('click', ()=> {
+    localStorage.removeItem('token');
+    alert('Logged out');
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'flex';
+    roomCreated = false;
+});
 
 // expose functions to global
 window.showLanding = showLanding;
